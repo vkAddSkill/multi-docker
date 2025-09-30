@@ -1,0 +1,27 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t vk_lethal/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run vk_lethal/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t vk_lethal/multi-client ./client
+  - docker build -t vk_lethal/multi-nginx ./nginx
+  - docker build -t vk_lethal/multi-server ./server
+  - docker build -t vk_lethal/multi-worker ./worker
+
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Take those images and push them to docker hub
+  - docker push vk_lethal/multi-client
+  - docker push vk_lethal/multi-nginx
+  - docker push vk_lethal/multi-server
+  - docker push vk_lethal/multi-worker
+
+
+
